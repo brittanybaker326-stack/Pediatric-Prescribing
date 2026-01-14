@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pediatric Prescribing & Dosage Calculations</title>
+
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React (UMD) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel so JSX works in a single HTML file (fine for teaching modules) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function PediatricDosingModule() {
+      const [activeTab, setActiveTab] = useState('learn');
+      const [currentLesson, setCurrentLesson] = useState(0);
+      const [quizAnswers, setQuizAnswers] = useState({});
+      const [showResults, setShowResults] = useState(false);
+      const [caseStudyAnswers, setCaseStudyAnswers] = useState({});
+      const [currentCase, setCurrentCase] = useState(0);
+
+      const lessons = [
+        {
+          title: "Weight-Based Dosing Fundamentals",
+          content: (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-blue-700">Key Principles</h3>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="font-semibold mb-2">Formula: Dose (mg) = Weight (kg) × Dose per kg (mg/kg)</p>
+                <p className="text-sm text-gray-700">Most pediatric medications are dosed based on weight to ensure therapeutic levels while minimizing toxicity.</p>
+              </div>
+
+              <h4 className="font-semibold mt-4">Important Conversions:</h4>
+              <ul className="list-disc ml-6 space-y-2">
+                <li>1 kg = 2.2 lbs</li>
+                <li>Weight in kg = Weight in lbs ÷ 2.2</li>
+                <li>Round weight to nearest tenth (0.1 kg)</li>
+              </ul>
+
+              <h4 className="font-semibold mt-4">Safety Considerations:</h4>
+              <ul className="list-disc ml-6 space-y-2">
+                <li>Verify maximum dose limits</li>
+                <li>Double-check calculations with high-alert medications</li>
+                <li>Consider body surface area (BSA) for select medications</li>
+                <li>Round final doses appropriately for available formulations</li>
+              </ul>
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
+                <p className="font-semibold">Never exceed adult maximum doses, even in large adolescents.</p>
+              </div>
+            </div>
+          )
+        },
+        {
+          title: "Common Pediatric Medications",
+          content: (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-blue-700">Essential Dosing Guidelines</h3>
+
+              <div className="space-y-4">
+                <div className="border-l-4 border-green-500 bg-green-50 p-4 rounded">
+                  <h4 className="font-bold text-green-800">Amoxicillin (Otitis Media)</h4>
+                  <p className="mt-2"><strong>Dose:</strong> 80–90 mg/kg/day divided BID</p>
+                  <p><strong>Max:</strong> 3000 mg/day</p>
+                  <p className="text-sm mt-2 text-gray-700">Example: 20 kg child = 1600–1800 mg/day (800–900 mg BID)</p>
+                </div>
+
+                <div className="border-l-4 border-purple-500 bg-purple-50 p-4 rounded">
+                  <h4 className="font-bold text-purple-800">Acetaminophen (Fever/Pain)</h4>
+                  <p className="mt-2"><strong>Dose:</strong> 10–15 mg/kg/dose every 4–6 hours</p>
+                  <p><strong>Max:</strong> 75 mg/kg/day or 4000 mg/day (whichever is lower)</p>
+                  <p className="text-sm mt-2 text-gray-700">Example: 12 kg child = 120–180 mg/dose (max 5 doses/day)</p>
+                </div>
+
+                <div className="border-l-4 border-red-500 bg-red-50 p-4 rounded">
+                  <h4 className="font-bold text-red-800">Ibuprofen (Fever/Pain)</h4>
+                  <p className="mt-2"><strong>Dose:</strong> 10 mg/kg/dose every 6–8 hours</p>
+                  <p><strong>Max:</strong> 40 mg/kg/day or 2400 mg/day (whichever is lower)</p>
+                  <p className="text-sm mt-2 text-gray-700">Example: 15 kg child = 150 mg/dose (max 4 doses/day)</p>
+                </div>
+
+                <div className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded">
+                  <h4 className="font-bold text-blue-800">Azithromycin</h4>
+                  <p className="mt-2"><strong>Dose:</strong> 10 mg/kg day 1, then 5 mg/kg days 2–5</p>
+                  <p><strong>Max:</strong> 500 mg day 1, 250 mg days 2–5</p>
+                  <p className="text-sm mt-2 text-gray-700">Example: 18 kg child = 180 mg day 1, 90 mg days 2–5</p>
+                </div>
+              </div>
+            </div>
+          )
+        },
+        {
+          title: "Concentration & Volume Calculations",
+          content: (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-blue-700">Working with Liquid Formulations</h3>
+              <div className="bg-indigo-50 p-4 rounded-lg">
+                <p className="font-semibold mb-2">Formula: Volume (mL) = Desired Dose (mg) ÷ Concentration (mg/mL)</p>
+                <p className="text-sm text-gray-700">This tells you how many mL to administer.</p>
+              </div>
+
+              <h4 className="font-semibold mt-4">Common Liquid Concentrations:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div className="bg-white p-3 rounded shadow-sm">
+                  <p className="font-semibold">Amoxicillin Suspension</p>
+                  <p className="text-sm">200 mg/5 mL or 400 mg/5 mL</p>
+                </div>
+                <div className="bg-white p-3 rounded shadow-sm">
+                  <p className="font-semibold">Acetaminophen</p>
+                  <p className="text-sm">160 mg/5 mL (common)</p>
+                </div>
+                <div className="bg-white p-3 rounded shadow-sm">
+                  <p className="font-semibold">Ibuprofen</p>
+                  <p className="text-sm">100 mg/5 mL (common)</p>
+                </div>
+                <div className="bg-white p-3 rounded shadow-sm">
+                  <p className="font-semibold">Azithromycin</p>
+                  <p className="text-sm">200 mg/5 mL (common)</p>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border-2 border-yellow-300 p-4 rounded mt-4">
+                <h4 className="font-bold text-yellow-800 mb-2">Step-by-Step Calculation:</h4>
+                <ol className="list-decimal ml-6 space-y-2 text-sm">
+                  <li>Convert weight to kg if given in lbs</li>
+                  <li>Calculate total daily dose: weight (kg) × dose (mg/kg)</li>
+                  <li>Divide by frequency to get single dose</li>
+                  <li>Verify against maximum dose</li>
+                  <li>Calculate volume: dose (mg) ÷ concentration (mg/mL)</li>
+                  <li>Round to measurable volume (nearest 0.5 mL or 1 mL as appropriate)</li>
+                </ol>
+              </div>
+
+              <div className="bg-green-50 p-4 rounded mt-4">
+                <h4 className="font-bold text-green-800 mb-2">Practice Example:</h4>
+                <p className="text-sm mb-2">Child weighs 22 lbs. Prescribe amoxicillin 90 mg/kg/day BID. Available: 400 mg/5 mL</p>
+                <ol className="list-decimal ml-6 space-y-1 text-sm">
+                  <li>22 lbs ÷ 2.2 = 10 kg</li>
+                  <li>10 kg × 90 mg/kg = 900 mg/day</li>
+                  <li>900 mg ÷ 2 doses = 450 mg/dose</li>
+                  <li>450 mg ÷ (400 mg/5 mL) = 5.6 mL per dose</li>
+                  <li><strong>Answer: 5.5 mL BID</strong></li>
+                </ol>
+              </div>
+            </div>
+          )
+        }
+      ];
+
+      const calculationQuiz = [
+        {
+          question: "A 15 kg child needs amoxicillin 80 mg/kg/day divided BID. What is the dose per administration?",
+          options: ["300 mg", "600 mg", "800 mg", "1200 mg"],
+          correct: 1,
+          explanation: "15 kg × 80 mg/kg = 1200 mg/day. Divided BID: 1200 ÷ 2 = 600 mg per dose."
+        },
+        {
+          question: "A child weighs 33 lbs. Calculate the weight in kg (round to nearest tenth).",
+          options: ["14.5 kg", "15.0 kg", "15.5 kg", "16.0 kg"],
+          correct: 1,
+          explanation: "33 lbs ÷ 2.2 = 15.0 kg."
+        },
+        {
+          question: "You need to give 240 mg of acetaminophen. The suspension is 160 mg/5 mL. How many mL do you administer?",
+          options: ["5 mL", "6 mL", "7.5 mL", "10 mL"],
+          correct: 2,
+          explanation: "160 mg/5 mL = 32 mg/mL. 240 mg ÷ 32 mg/mL = 7.5 mL."
+        },
+        {
+          question: "A 25 kg child needs ibuprofen 10 mg/kg/dose. What is the maximum number of doses per day?",
+          options: ["3 doses", "4 doses", "5 doses", "6 doses"],
+          correct: 1,
+          explanation: "Maximum daily is 40 mg/kg/day. With 10 mg/kg/dose, maximum is 4 doses/day."
+        },
+        {
+          question: "An 8 kg infant needs azithromycin day 1 at 10 mg/kg. Suspension is 200 mg/5 mL. Calculate the volume to administer.",
+          options: ["2 mL", "3 mL", "4 mL", "5 mL"],
+          correct: 0,
+          explanation: "8 kg × 10 mg/kg = 80 mg. 200 mg/5 mL = 40 mg/mL. 80 ÷ 40 = 2 mL."
+        }
+      ];
+
+      const caseStudies = [
+        {
+          title: "Case 1: Acute Otitis Media",
+          scenario: "Emma is a 3-year-old who weighs 30 lbs. She presents with ear pain, fever, and a bulging red tympanic membrane. You prescribe high-dose amoxicillin (90 mg/kg/day). Available suspension: 400 mg/5 mL.",
+          questions: [
+            { question: "What is Emma's weight in kg?", options: ["12.6 kg", "13.6 kg", "14.6 kg", "15.6 kg"], correct: 1 },
+            { question: "What is the total daily dose of amoxicillin?", options: ["1134 mg/day", "1224 mg/day", "1314 mg/day", "1404 mg/day"], correct: 1 },
+            { question: "What is the dose per administration (BID)?", options: ["567 mg", "612 mg", "657 mg", "702 mg"], correct: 1 },
+            { question: "How many mL should be given per dose?", options: ["6.5 mL", "7 mL", "7.5 mL", "8 mL"], correct: 2 }
+          ],
+          explanation: "30 lbs ÷ 2.2 = 13.6 kg. Daily: 13.6 × 90 = 1224 mg/day. BID dose: 1224 ÷ 2 = 612 mg. Volume: 400 mg/5 mL = 80 mg/mL → 612 ÷ 80 = 7.65 mL, round to 7.5 mL."
+        },
+        {
+          title: "Case 2: Fever Management",
+          scenario: "Liam is an 18‑month‑old weighing 11 kg with a fever of 102.5°F. You prescribe acetaminophen. Available: 160 mg/5 mL.",
+          questions: [
+            { question: "Appropriate single dose range for Liam?", options: ["55–82.5 mg", "88–110 mg", "110–165 mg", "165–220 mg"], correct: 2 },
+            { question: "If you prescribe 150 mg per dose, how many mL?", options: ["3.75 mL", "4.25 mL", "4.7 mL", "5 mL"], correct: 2 },
+            { question: "Maximum number of doses in 24 hours?", options: ["4", "5", "6", "8"], correct: 1 },
+            { question: "Maximum daily acetaminophen dose?", options: ["660 mg", "750 mg", "825 mg", "900 mg"], correct: 2 }
+          ],
+          explanation: "10–15 mg/kg/dose → 110–165 mg. 160 mg/5 mL = 32 mg/mL → 150 ÷ 32 = 4.7 mL. Max daily 75 mg/kg/day → 75×11 = 825 mg/day; 5 doses of 150 mg = 750 mg."
+        },
+        {
+          title: "Case 3: Upper Respiratory Infection",
+          scenario: "Sophia is 7 years old, 50 lbs. You prescribe azithromycin. Available: 200 mg/5 mL.",
+          questions: [
+            { question: "Sophia's weight in kg?", options: ["20.7 kg", "22.7 kg", "24.7 kg", "26.7 kg"], correct: 1 },
+            { question: "Day 1 dose (10 mg/kg)?", options: ["207 mg", "227 mg", "247 mg", "267 mg"], correct: 1 },
+            { question: "How many mL on Day 1?", options: ["4.5 mL", "5 mL", "5.5 mL", "6 mL"], correct: 2 },
+            { question: "Dose for Days 2–5 (5 mg/kg)?", options: ["103.5 mg", "113.5 mg", "123.5 mg", "133.5 mg"], correct: 1 }
+          ],
+          explanation: "50 lbs ÷ 2.2 = 22.7 kg. Day 1: 22.7×10 = 227 mg. 200 mg/5 mL = 40 mg/mL → 227 ÷ 40 = 5.7 mL (round to 5.5). Days 2–5: 22.7×5 = 113.5 mg."
+        }
+      ];
+
+      const getQuizScore = () => {
+        let correct = 0;
+        calculationQuiz.forEach((q, idx) => {
+          if (quizAnswers[idx] === q.correct) correct++;
+        });
+        return correct;
+      };
+
+      const getCaseScore = () => {
+        const qs = caseStudies[currentCase].questions;
+        let correct = 0;
+        qs.forEach((q, idx) => {
+          const key = currentCase.toString() + '-' + idx.toString();
+          if (caseStudyAnswers[key] === q.correct) correct++;
+        });
+        return correct;
+      };
+
+      const currentCaseAnswerCount = Object.keys(caseStudyAnswers).filter(k => k.startsWith(currentCase.toString() + '-')).length;
+      const currentCaseQuestionCount = caseStudies[currentCase].questions.length;
+
+      const tabBtn = (tab, label, icon) => (
+        <button
+          onClick={() => {
+            setActiveTab(tab);
+            if (tab === 'practice') setShowResults(false);
+          }}
+          className={
+            activeTab === tab
+              ? "flex items-center gap-2 px-6 py-4 font-semibold transition-colors border-b-2 border-blue-600 text-blue-600"
+              : "flex items-center gap-2 px-6 py-4 font-semibold transition-colors text-gray-600 hover:text-blue-600"
+          }
+        >
+          <span aria-hidden="true">{icon}</span>
+          {label}
+        </button>
+      );
+
+      return (
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="bg-white rounded-lg shadow-xl p-6 mb-6">
+            <h1 className="text-3xl font-bold text-blue-900 mb-2">Pediatric Prescribing & Dosage Calculations</h1>
+            <p className="text-gray-600">Interactive Learning Module for FNP Students</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-lg">
+            <div className="border-b border-gray-200">
+              <div className="flex flex-wrap">
+                {tabBtn('learn', 'Learn', '📘')}
+                {tabBtn('practice', 'Practice Quiz', '🧮')}
+                {tabBtn('cases', 'Case Studies', '🩺')}
+              </div>
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'learn' && (
+                <div>
+                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    {lessons.map((lesson, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentLesson(idx)}
+                        className={
+                          currentLesson === idx
+                            ? "px-4 py-2 rounded-lg whitespace-nowrap transition-colors bg-blue-600 text-white"
+                            : "px-4 py-2 rounded-lg whitespace-nowrap transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        }
+                      >
+                        {idx + 1}. {lesson.title}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <h2 className="text-2xl font-bold mb-4 text-gray-800">{lessons[currentLesson].title}</h2>
+                    {lessons[currentLesson].content}
+                  </div>
+
+                  <div className="flex justify-between mt-6">
+                    <button
+                      onClick={() => setCurrentLesson(Math.max(0, currentLesson - 1))}
+                      disabled={currentLesson === 0}
+                      className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentLesson(Math.min(lessons.length - 1, currentLesson + 1))}
+                      disabled={currentLesson === lessons.length - 1}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      Next <span aria-hidden="true">›</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'practice' && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-4 text-gray-800">Dosage Calculation Practice</h2>
+                  <p className="text-gray-600 mb-6">Test your knowledge with these calculation problems.</p>
+
+                  <div className="space-y-6">
+                    {calculationQuiz.map((q, idx) => (
+                      <div key={idx} className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                        <p className="font-semibold mb-4 text-gray-800">{idx + 1}. {q.question}</p>
+                        <div className="space-y-2">
+                          {q.options.map((option, optIdx) => {
+                            const isCorrect = optIdx === q.correct;
+                            const isSelected = quizAnswers[idx] === optIdx;
+                            let labelClass = "flex items-center p-3 rounded-lg cursor-pointer transition-colors ";
+
+                            if (showResults) {
+                              if (isCorrect) labelClass += "bg-green-100 border-2 border-green-500";
+                              else if (isSelected) labelClass += "bg-red-100 border-2 border-red-500";
+                              else labelClass += "bg-white";
+                            } else {
+                              if (isSelected) labelClass += "bg-blue-100 border-2 border-blue-500";
+                              else labelClass += "bg-white hover:bg-gray-100";
+                            }
+
+                            return (
+                              <label key={optIdx} className={labelClass}>
+                                <input
+                                  type="radio"
+                                  name={"question-" + idx}
+                                  checked={isSelected}
+                                  onChange={() => { if (!showResults) setQuizAnswers({ ...quizAnswers, [idx]: optIdx }); }}
+                                  disabled={showResults}
+                                  className="mr-3"
+                                />
+                                <span className="flex-1">{option}</span>
+                                {showResults && isCorrect && <span aria-hidden="true">✅</span>}
+                                {showResults && isSelected && !isCorrect && <span aria-hidden="true">❌</span>}
+                              </label>
+                            );
+                          })}
+                        </div>
+
+                        {showResults && (
+                          <div className="mt-4 p-3 bg-blue-50 rounded border-l-4 border-blue-500">
+                            <p className="text-sm font-semibold text-blue-900 mb-1">Explanation:</p>
+                            <p className="text-sm text-gray-700">{q.explanation}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {!showResults ? (
+                    <button
+                      onClick={() => setShowResults(true)}
+                      className="mt-6 px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                    >
+                      Submit Quiz
+                    </button>
+                  ) : (
+                    <div className="mt-6 p-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span aria-hidden="true" className="text-2xl">🏅</span>
+                        <h3 className="text-2xl font-bold">Quiz Complete!</h3>
+                      </div>
+                      <p className="text-xl">
+                        Score: {getQuizScore()} out of {calculationQuiz.length} ({Math.round((getQuizScore() / calculationQuiz.length) * 100)}%)
+                      </p>
+                      <button
+                        onClick={() => { setQuizAnswers({}); setShowResults(false); }}
+                        className="mt-4 px-6 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 font-semibold"
+                      >
+                        Retry Quiz
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'cases' && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-4 text-gray-800">Clinical Case Studies</h2>
+                  <p className="text-gray-600 mb-6">Apply your knowledge to realistic patient scenarios.</p>
+
+                  <div className="flex gap-2 mb-6 flex-wrap">
+                    {caseStudies.map((cs, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => { setCurrentCase(idx); setCaseStudyAnswers({}); }}
+                        className={
+                          currentCase === idx
+                            ? "px-4 py-2 rounded-lg transition-colors bg-indigo-600 text-white"
+                            : "px-4 py-2 rounded-lg transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        }
+                      >
+                        Case {idx + 1}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 mb-6">
+                    <h3 className="text-xl font-bold text-indigo-900 mb-3">{caseStudies[currentCase].title}</h3>
+                    <p className="text-gray-700 leading-relaxed">{caseStudies[currentCase].scenario}</p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {caseStudies[currentCase].questions.map((q, qIdx) => (
+                      <div key={qIdx} className="bg-white rounded-lg p-5 border-2 border-gray-200 shadow-sm">
+                        <p className="font-semibold mb-4 text-gray-800">Question {qIdx + 1}: {q.question}</p>
+                        <div className="space-y-2">
+                          {q.options.map((option, optIdx) => {
+                            const answerKey = currentCase.toString() + '-' + qIdx.toString();
+                            const isSelected = caseStudyAnswers[answerKey] === optIdx;
+                            const isCorrect = optIdx === q.correct;
+                            const showAnswer = caseStudyAnswers[answerKey] !== undefined;
+
+                            let labelClass = "flex items-center p-3 rounded-lg cursor-pointer transition-colors ";
+                            if (showAnswer) {
+                              if (isCorrect) labelClass += "bg-green-100 border-2 border-green-500";
+                              else if (isSelected) labelClass += "bg-red-100 border-2 border-red-500";
+                              else labelClass += "bg-white";
+                            } else {
+                              if (isSelected) labelClass += "bg-indigo-100 border-2 border-indigo-500";
+                              else labelClass += "bg-gray-50 hover:bg-gray-100 border-2 border-transparent";
+                            }
+
+                            return (
+                              <label key={optIdx} className={labelClass}>
+                                <input
+                                  type="radio"
+                                  name={'case-' + currentCase.toString() + '-' + qIdx.toString()}
+                                  checked={isSelected}
+                                  onChange={() => setCaseStudyAnswers({ ...caseStudyAnswers, [answerKey]: optIdx })}
+                                  className="mr-3"
+                                />
+                                <span className="flex-1">{option}</span>
+                                {showAnswer && isCorrect && <span aria-hidden="true">✅</span>}
+                                {showAnswer && isSelected && !isCorrect && <span aria-hidden="true">❌</span>}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {currentCaseAnswerCount === currentCaseQuestionCount && (
+                    <div className="mt-6 p-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span aria-hidden="true" className="text-2xl">🏅</span>
+                        <h3 className="text-2xl font-bold">Case Complete!</h3>
+                      </div>
+                      <p className="text-xl mb-4">
+                        Score: {getCaseScore()} out of {currentCaseQuestionCount} ({Math.round((getCaseScore() / currentCaseQuestionCount) * 100)}%)
+                      </p>
+                      <div className="bg-white bg-opacity-20 p-4 rounded-lg mt-4">
+                        <p className="font-semibold mb-2">Explanation:</p>
+                        <p className="text-sm">{caseStudies[currentCase].explanation}</p>
+                      </div>
+                      <button
+                        onClick={() => setCaseStudyAnswers({})}
+                        className="mt-4 px-6 py-2 bg-white text-indigo-600 rounded-lg hover:bg-gray-100 font-semibold"
+                      >
+                        Retry Case
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <footer className="text-xs text-gray-500 mt-6">
+            Note: This is a single-file React module (React + Babel via CDN) intended for easy hosting as an external link.
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<PediatricDosingModule />);
+  </script>
+</body>
+</html>
